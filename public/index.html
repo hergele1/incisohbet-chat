@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>İnciSohbet</title>
+  <style>
+    body { font-family: Arial; margin:0; padding:0; background:#f4f4f4;}
+    #chat { max-width:800px; margin:20px auto; background:#fff; padding:10px; border-radius:6px;}
+    #messages { height:300px; overflow:auto; border:1px solid #ddd; padding:5px; }
+    .system { color:gray; font-style:italic; }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <h2>İnciSohbet</h2>
+    <div id="messages"></div>
+    <input id="input" placeholder="Mesaj yaz... (komutlar /ns /oper /zline /gline /nick /chanserv)"/>
+    <button id="send">Gönder</button>
+  </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const messages = document.getElementById('messages');
+const input = document.getElementById('input');
+const send = document.getElementById('send');
+
+function add(msg, cls){
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.textContent = msg;
+  messages.appendChild(d); messages.scrollTop = messages.scrollHeight;
+}
+
+socket.on('message', (m) => {
+  add(`${m.from}: ${m.text} [${new Date(m.time).toLocaleTimeString()}]`);
+});
+socket.on('system', (t) => add(`* ${t}`, 'system'));
+
+send.onclick = () => {
+  const v = input.value;
+  if (!v) return;
+  if (v.startsWith('/')) {
+    // commands via 'command' channel
+    socket.emit('command', v);
+  } else {
+    socket.emit('chat', v);
+  }
+  input.value = '';
+};
+</script>
+</body>
+</html>
